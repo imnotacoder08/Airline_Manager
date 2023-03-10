@@ -1,13 +1,22 @@
-import React from "react";
+import React, { useEffect } from "react";
 import MaterialTable from "@material-table/core";
 import { Container } from "@material-ui/core";
 import Navbar from "../Navbar";
 const { useState } = React;
 import { v4 } from "uuid";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import ancillaryServices_slice from "../../store/anciliaryServices_slice";
+import {
+  deleteAncillaryService,
+  saveAncillaryService,
+} from "../../api/ancillaryServiceApi";
 
 export default function ManageAnciliaryService() {
+  const dispatch = useDispatch();
+  const anc = useSelector(
+    (state) => state.ancillaryServices_slice.ancillary_services
+  );
+  console.log(anc);
   const columns = [
     {
       title: "Flight",
@@ -34,7 +43,10 @@ export default function ManageAnciliaryService() {
     (state) => state.ancillaryServices_slice.ancillary_services
   );
   const [data, setData] = useState(initialData);
-
+  console.log(data);
+  useEffect(() => {
+    setData(initialData);
+  }, [initialData]);
   return (
     <>
       <meta
@@ -64,7 +76,12 @@ export default function ManageAnciliaryService() {
               new Promise((resolve, reject) => {
                 setTimeout(() => {
                   setData([...data, newData]);
-
+                  saveAncillaryService(newData);
+                  dispatch(
+                    ancillaryServices_slice.actions.addAncillaryServices(
+                      newData
+                    )
+                  );
                   resolve();
                 }, 1000);
               }),
@@ -77,7 +94,12 @@ export default function ManageAnciliaryService() {
                   console.log(newData);
                   dataUpdate[index] = newData;
                   setData([...dataUpdate]);
-
+                  saveAncillaryService(newData);
+                  dispatch(
+                    ancillaryServices_slice.actions.updateAncillaryServices(
+                      newData
+                    )
+                  );
                   resolve();
                 }, 1000);
               }),
@@ -85,10 +107,14 @@ export default function ManageAnciliaryService() {
               new Promise((resolve, reject) => {
                 setTimeout(() => {
                   const dataDelete = [...data];
-                  const index = oldData.tableData.id;
-                  // dataDelete.splice(index, 1);
+                  const index = oldData.id;
                   setData([...dataDelete]);
-
+                  deleteAncillaryService(oldData);
+                  dispatch(
+                    ancillaryServices_slice.actions.deleteAncillaryServices(
+                      oldData
+                    )
+                  );
                   resolve();
                 }, 1000);
               }),

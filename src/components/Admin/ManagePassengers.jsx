@@ -2,23 +2,26 @@ import React, { useEffect } from "react";
 import MaterialTable from "@material-table/core";
 import { Container, Select } from "@material-ui/core";
 import Navbar from "../Navbar";
-import { useSelector } from "react-redux";
-import AddPassenger from "../../APIs/AddPassengerData";
-import DeletePassengerData from "../../APIs/DeletePassengerData";
-import updatePassengerData from "../../APIs/UpdatePassangerData";
+import { useDispatch, useSelector } from "react-redux";
 import { MenuItem } from "@mui/material";
+import { deletePassenger, savePassenger } from "../../api/passengerApi";
+import { passenger_actions } from "../../store/passengers-slice";
+import { cancelFlight } from "../../api/flightManagerAPI";
+import { seat_actions } from "../../store/seat_slice";
 const { useState } = React;
 
 export default function ManagePassengers() {
+  const dispatch = useDispatch();
   const initialData = useSelector((state) => state.passenger_slice.Passengers);
   const [data, setData] = useState(initialData);
+  console.log(data);
   useEffect(() => {
     setData(initialData);
   }, [initialData]);
   const remainingseats = useSelector(
     (state) => state.seat_slice.remainingSeats
   );
-
+  let bookedSeats = useSelector((state) => state.seat_slice.bookedSeats);
   const Lookup = useSelector((state) => state.ancillaryServices_slice.lookup);
   const [flightLookup, serviceLookup, shoppingLookup, seatLookup] = Lookup;
   const columns = [
@@ -33,11 +36,6 @@ export default function ManagePassengers() {
       title: "WheelChair",
       field: "wheelChair",
       type: "boolean",
-    },
-    {
-      title: "Anciliary Service",
-      field: "anciliary_service",
-      lookup: { ...serviceLookup },
     },
     {
       title: "Flight",
@@ -88,12 +86,17 @@ export default function ManagePassengers() {
       ),
     },
     {
+      title: "Anciliary Service",
+      field: "anciliary_service",
+      lookup: { ...serviceLookup },
+    },
+    {
       title: "Shopping item",
       field: "shop",
       lookup: { ...shoppingLookup },
     },
   ];
-
+  console.log(data);
   const style = {
     container: {
       display: "flex",
@@ -122,30 +125,52 @@ export default function ManagePassengers() {
             onRowAdd: (newData) =>
               new Promise(async (resolve, reject) => {
                 setData([...data, newData]);
-                await AddPassenger(newData);
+                savePassenger(newData);
+                dispatch(passenger_actions.addPassenger(newData));
+                dispatch(
+                  seat_actions.bookedSeats({
+                    ...bookedSeats,
+                    [newData.flight]: [
+                      ...(bookedSeats[newData.flight] || []),
+                      newData.seat,
+                    ],
+                  })
+                );
                 resolve();
               }),
+
             onRowUpdate: (newData, oldData) =>
               new Promise(async (resolve, reject) => {
                 const dataUpdate = [...data];
-                const index = oldData.tableData.id;
-                dataUpdate[index - 1] = newData;
+                data.forEach((pass, idx) => {
+                  if (pass.id === newData.id) dataUpdate[idx] = newData;
+                });
                 setData([...dataUpdate]);
-                console.log([...dataUpdate]);
-                const updatedData = { ...newData };
-                delete updatedData.tableData;
-                await updatePassengerData(updatedData);
+                delete newData.tableData;
+                savePassenger({ ...newData });
+                dispatch(passenger_actions.updatePassenger(newData));
                 resolve();
               }),
+
             onRowDelete: (oldData) =>
               new Promise(async (resolve, reject) => {
                 const dataDelete = [...data];
                 const index = oldData.id;
+                const seatInfo = dataDelete.find((d) => d.id === index);
                 const filteredData = dataDelete.filter(
                   (data) => data.id !== index
                 );
-                await DeletePassengerData(index);
+                deletePassenger(index);
+                cancelFlight(seatInfo);
                 setData([...filteredData]);
+                dispatch(passenger_actions.deletePassenger(filteredData));
+                bookedSeats = {
+                  ...bookedSeats,
+                  [seatInfo.flight]: bookedSeats[seatInfo.flight].filter(
+                    (seat) => seat !== seatInfo.seat
+                  ),
+                };
+                dispatch(seat_actions.bookedSeats(bookedSeats));
                 resolve();
               }),
           }}

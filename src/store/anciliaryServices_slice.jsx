@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 const ancillary_services = [
-  { flight: 2, services: 1, shopping_itms: 3 },
-  { flight: 1, services: 3, shopping_itms: 2 },
+  // { flight: 2, services: 1, shopping_itms: 3 },
+  // { flight: 1, services: 3, shopping_itms: 2 },
 ];
 const lookup = [
   { 1: "Flight 1", 2: "Flight 2", 3: "Flight  3" },
@@ -31,7 +31,13 @@ const ancillaryServices_slice = createSlice({
   name: "ancillaryServices_slice",
   initialState,
   reducers: {
+    fetchAncService(state, action) {
+      console.log(action.payload);
+      state.ancillary_services.push(...action.payload);
+      return state;
+    },
     addAncillaryServices(state, action) {
+      console.log(action.payload);
       state.ancillary_services.push(action.payload);
       return state;
     },
@@ -48,7 +54,10 @@ const ancillaryServices_slice = createSlice({
     },
     deleteAncillaryServices(state, action) {
       const filteredResult = state.ancillary_services.filter(
-        (ancillary_service) => ancillary_service.id !== action.payload.id
+        (ancillary_service) => {
+          console.log(ancillary_service, action.payload);
+          return ancillary_service.id !== action.payload.id;
+        }
       );
       state.ancillary_services = filteredResult;
       return state;

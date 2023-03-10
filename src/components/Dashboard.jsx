@@ -6,10 +6,11 @@ import Navbar from "./Navbar";
 import { useSelector } from "react-redux";
 export default function Dashboard() {
   const isAdmin = useSelector((state) => state.ui_slice.isAdmin);
+  console.log(isAdmin);
   return (
     <>
       <Navbar />
-      {isAdmin !== null && (
+      {
         <Container
           maxWidth="lg"
           sx={{
@@ -20,9 +21,9 @@ export default function Dashboard() {
             alignItems: "center",
           }}
         >
-          {isAdmin ? <AdminDashBoard /> : <StaffDashBoard />}
+          {!isAdmin ? <AdminDashBoard /> : <StaffDashBoard />}
         </Container>
-      )}
+      }
     </>
   );
 }

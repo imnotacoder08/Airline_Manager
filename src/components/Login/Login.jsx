@@ -18,6 +18,7 @@ export default function SignIn({ logInAs }) {
     const password = data.get("password");
     dispatch(SignInAction(email, password));
   };
+  console.log(logInAs);
   return (
     <>
       <CssBaseline />

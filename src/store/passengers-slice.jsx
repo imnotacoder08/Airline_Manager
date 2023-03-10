@@ -18,7 +18,6 @@ const passenger_slice = createSlice({
         (pass) => pass.id !== action.payload.id
       );
       state.Passengers = [...unChangedInfo, action.payload];
-      console.log(state.Passengers);
       return state;
     },
     deletePassenger(state, action) {
